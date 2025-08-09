@@ -1,24 +1,45 @@
+# This file specifies the services for your LLM application on Render.
+
 services:
   # Service 1: The FastAPI Backend
-  # We have REMOVED the envVars section to guarantee deployment.
+  # This service runs your Python code for the Large Language Model.
   - type: web
     name: llm-backend
     runtime: docker
-    repo: https://github.com/majisoumya/llm2.git # Change this!
-    rootDir: backend
-    dockerfilePath: backend/dockerfile
+    # IMPORTANT: Replace this with the URL of your own GitHub repository.
+    repo: https://github.com/majisoumya/llm2.git
+    # This tells Render to work inside your 'backend' folder.
+    rootDir: ./backend
+    # Because of 'rootDir', the path to the Dockerfile is now simple.
+    # This fixes the 'backend/backend' error.
+    dockerfilePath: Dockerfile
     healthCheckPath: /
+    # The 'free' plan is good for testing. Upgrade if you need more memory/CPU.
     plan: free
+    # Environment variables for your backend (e.g., API keys).
+    #
+    # IMPORTANT: If your backend needs a secret key (like an OpenAI key):
+    # 1. Go to the Render Dashboard -> Environment tab for this service.
+    # 2. Add a secret variable with the key name (e.g., OPENAI_API_KEY).
+    # 3. Uncomment the lines below and make sure the key name matches.
+    #
+    # If your backend does NOT need any keys, you can leave this section commented out or delete it.
+    # envVars:
+    #   - key: YOUR_API_KEY_NAME # Make sure this key name matches the one in the dashboard
+    #     fromSecret: true
 
   # Service 2: The Streamlit Frontend
+  # This service runs your Streamlit user interface.
   - type: web
     name: llm-frontend
     runtime: docker
-    repo: https://github.com/majisoumya/llm2.git # Change this!
-    rootDir: frontend
-    dockerfilePath: frontend/dockerfile
+    # IMPORTANT: Replace this with the URL of your own GitHub repository.
+    repo: https://github.com/majisoumya/llm2.git
+    rootDir: ./frontend
+    dockerfilePath: Dockerfile
     plan: free
     envVars:
+      # This correctly points your frontend to the internal address of your backend.
+      # It assumes your backend listens on port 8000, which is standard for FastAPI.
       - key: BACKEND_URL
         value: http://llm-backend:8000
-
