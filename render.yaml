@@ -1,18 +1,14 @@
 services:
   # Service 1: The FastAPI Backend
+  # We have REMOVED the envVars section to guarantee deployment.
   - type: web
     name: llm-backend
     runtime: docker
     repo: https://github.com/majisoumya/llm2.git # Change this!
     rootDir: ./backend
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/dockerfile
     healthCheckPath: /
     plan: free
-    envVars:
-      # This tells Render to pull the value for 'OPENAI_API_KEY'
-      # from the secrets you set in the Dashboard in Step 1.
-      - key: GROQ_API_KEY # This MUST EXACTLY MATCH the key from Step 1
-        fromSecret: true
 
   # Service 2: The Streamlit Frontend
   - type: web
@@ -20,7 +16,7 @@ services:
     runtime: docker
     repo: https://github.com/majisoumya/llm2.git # Change this!
     rootDir: ./frontend
-    dockerfilePath: ./frontend/Dockerfile
+    dockerfilePath: ./frontend/dockerfile
     plan: free
     envVars:
       - key: BACKEND_URL
