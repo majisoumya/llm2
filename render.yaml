@@ -8,9 +8,11 @@ services:
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /
     plan: free
-    # This section tells Render to use the Environment Group you created
-    envVarGroups:
-      - name: llm-secrets # <-- Use the exact name from Step A
+    envVars:
+      # This tells Render to pull the value for 'OPENAI_API_KEY'
+      # from the secrets you set in the Dashboard in Step 1.
+      - key: GROQ_API_KEY # This MUST EXACTLY MATCH the key from Step 1
+        fromSecret: true
 
   # Service 2: The Streamlit Frontend
   - type: web
@@ -23,4 +25,3 @@ services:
     envVars:
       - key: BACKEND_URL
         value: http://llm-backend:8000
-
