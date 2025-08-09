@@ -1,47 +1,35 @@
-# render.yaml
-# This file defines the services for deploying the full-stack application on Render.
-
 services:
-  # --- FastAPI Backend Service ---
+  # Service 1: The FastAPI Backend
   - type: web
-    name: intelligent-query-backend
-    # Specifies the runtime environment for the service.
-    env: python
-    # Sets the root directory for the backend service.
-    rootDir: backend
-    # Defines the command to install dependencies.
-    buildCommand: "./build.sh"
-    # Defines the command to start the web server.
-    # Uvicorn is configured to bind to the host and port provided by Render.
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
-    # Health check to ensure the service is running correctly.
-    healthCheckPath: /
-    # Defines environment variables for the service.
+    name: llm-backend
+    runtime: docker
+    repo: https://github.com/majisoumya/llm2.gitE # Change this!
+    rootDir: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: / # A simple path to check if the service is up
+    plan: free # Or a paid plan for more resources
     envVars:
-      - key: GROQ_API_KEY
-        # This should be set in the Render dashboard, not hardcoded.
-        fromSecret: true
       - key: PYTHON_VERSION
-        value: 3.11.4
+        value: 3.9.19
+      # Add any secret keys your model needs here (e.g., OPENAI_API_KEY)
+      # Go to Render Dashboard -> Environment to set secret values
+      - key: YOUR_MODEL_API_KEY
+        fromSecret: true
 
-  # --- Streamlit Frontend Service ---
+  # Service 2: The Streamlit Frontend
   - type: web
-    name: intelligent-query-frontend
-    # Specifies the runtime environment for the service.
-    env: python
-    # Sets the root directory for the frontend service.
-    rootDir: frontend
-    # Defines the command to install dependencies.
-    buildCommand: "pip install -r requirements.txt"
-    # Defines the command to start the Streamlit server.
-    startCommand: "streamlit run app.py --server.port $PORT --server.address 0.0.0.0"
-    # Defines environment variables for the service.
+    name: llm-frontend
+    runtime: docker
+    repo: https://github.com/majisoumya/llm2.git # Change this!
+    rootDir: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free # Or a paid plan
     envVars:
-      - key: API_BASE_URL
-        # This dynamically gets the URL of the backend service.
+      - key: PYTHON_VERSION
+        value: 3.9.19
+      # This is the magic part! Render automatically injects the backend's URL
+      - key: BACKEND_URL
         fromService:
           type: web
-          name: intelligent-query-backend
+          name: llm-backend
           property: url
-      - key: PYTHON_VERSION
-        value: 3.11.4
