@@ -5,8 +5,8 @@ services:
     name: llm-backend
     runtime: docker
     repo: https://github.com/majisoumya/llm2.git # Change this!
-    rootDir: ./backend
-    dockerfilePath: ./backend/dockerfile
+    rootDir: backend
+    dockerfilePath: backend/dockerfile
     healthCheckPath: /
     plan: free
 
@@ -15,9 +15,10 @@ services:
     name: llm-frontend
     runtime: docker
     repo: https://github.com/majisoumya/llm2.git # Change this!
-    rootDir: ./frontend
-    dockerfilePath: ./frontend/dockerfile
+    rootDir: frontend
+    dockerfilePath: frontend/dockerfile
     plan: free
     envVars:
       - key: BACKEND_URL
         value: http://llm-backend:8000
+
