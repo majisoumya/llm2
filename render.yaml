@@ -8,11 +8,9 @@ services:
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /
     plan: free
-    envVars:
-      # This is an example of a secret key.
-      # You must create a secret named 'YOUR_MODEL_API_KEY' in the Render Environment tab.
-      - key: YOUR_MODEL_API_KEY
-        fromSecret: true
+    # This section tells Render to use the Environment Group you created
+    envVarGroups:
+      - name: llm-secrets # <-- Use the exact name from Step A
 
   # Service 2: The Streamlit Frontend
   - type: web
@@ -23,6 +21,5 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     plan: free
     envVars:
-      # This correctly points the frontend to the internal address of the backend
       - key: BACKEND_URL
         value: http://llm-backend:8000
