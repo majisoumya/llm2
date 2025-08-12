@@ -49,7 +49,7 @@ st.markdown(glass_box_css, unsafe_allow_html=True)
 
 
 # --- Backend API Configuration ---
-API_BASE_URL = "http://localhost:8000/api/v1"
+API_BASE_URL = "https://huggingface.co/spaces/soumya721644/backend_llm"
 API_ENDPOINT = f"{API_BASE_URL}/hackrx/run"
 
 # --- UI Components ---
@@ -153,3 +153,4 @@ if submit_button:
 
 else:
     st.info("Enter a document URL and your questions in the sidebar, then click 'Get Answers'.")
+
