@@ -49,8 +49,9 @@ st.markdown(glass_box_css, unsafe_allow_html=True)
 
 
 # --- Backend API Configuration ---
-API_BASE_URL = "https://soumya721644-backend_llm.hf.space/api/v1"
+API_BASE_URL = "https://soumya721644-backend-llm.hf.space/api/v1"
 API_ENDPOINT = f"{API_BASE_URL}/hackrx/run"
+
 
 
 
@@ -155,6 +156,7 @@ if submit_button:
 
 else:
     st.info("Enter a document URL and your questions in the sidebar, then click 'Get Answers'.")
+
 
 
 
