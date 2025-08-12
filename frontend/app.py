@@ -1,4 +1,3 @@
-# frontend/app.py
 import streamlit as st
 import requests
 import json
@@ -10,154 +9,121 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Custom CSS for Enhanced Glassmorphism Effect ---
-# This CSS has been updated to improve text readability. The glass box
-# is slightly darker, and the text is now white with a shadow to create
-# strong contrast against the blurred background.
+# --- Custom CSS ---
 glass_box_css = """
 <style>
 body {
-    background-color: #e0e5ec; /* A neutral, light background */
+    background-color: #e0e5ec;
 }
 .glass-box {
-    background: rgba(40, 55, 71, 0.6); /* Darker, semi-transparent background for contrast */
+    background: rgba(40, 55, 71, 0.6);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px); /* For Safari */
-    border-radius: 15px; /* Rounded corners */
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 25px;
-    margin-bottom: 20px; /* Space between boxes */
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); /* Subtle shadow for depth */
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 }
 .question-title {
     font-weight: bold;
     font-size: 1.15em;
-    color: #ffffff; /* Bright white for high contrast */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); /* Shadow for readability */
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     margin-bottom: 12px;
 }
 .answer-text {
-    color: #f0f3f4; /* A slightly softer white for the answer */
-    font-size: 1.05em; /* Increase font size slightly */
-    font-weight: 500; /* Make the answer text a bit bolder */
+    color: #f0f3f4;
+    font-size: 1.05em;
+    font-weight: 500;
     line-height: 1.6;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Stronger shadow for pop */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 </style>
 """
 st.markdown(glass_box_css, unsafe_allow_html=True)
 
-
 # --- Backend API Configuration ---
 API_BASE_URL = "https://soumya721644-backend-llm.hf.space/api/v1"
-API_ENDPOINT = f"{API_BASE_URL}/hackrx/run"
+UPLOAD_ENDPOINT = f"{API_BASE_URL}/hackrx/upload"   # New upload route in backend
+RUN_ENDPOINT = f"{API_BASE_URL}/hackrx/run"
 
-
-
-
-# --- UI Components ---
+# --- UI ---
 st.title("📄 Intelligent Document Query System")
-st.markdown("An LLM-powered system to answer questions about your documents (insurance, legal, HR, etc.).")
+st.markdown("An LLM-powered system to answer questions about your uploaded documents.")
 st.divider()
 
-# --- Sidebar for Inputs ---
 with st.sidebar:
     st.header("⚙️ Configuration")
-    
-    # Pre-fill with sample data from the problem statement
-    doc_url = st.text_input(
-        "Enter Document URL (PDF)", 
-        "https://hackrx.blob.core.windows.net/assets/policy.pdf?sv=2023-01-03&st=2025-07-04T09%3A11%3A24Z&se=2027-07-05T09%3A11%3A00Z&sr=b&sp=r&sig=N4a9OU0w0QXO6AOIBiu4bpl7AXvEZogeT%2FjUHNO7HzQ%3D"
-    )
-    
+
+    uploaded_file = st.file_uploader("📂 Upload PDF Document", type=["pdf"])
     bearer_token = st.text_input(
-        "Enter Bearer Token", 
-        "b8171a8cdbd8010a1ac308defcbcc5210fbba7412f60ef99cd428ffb3a412be7", 
+        "Enter Bearer Token",
+        "b8171a8cdbd8010a1ac308defcbcc5210fbba7412f60ef99cd428ffb3a412be7",
         type="password"
     )
-    
+
     st.subheader("❓ Ask Questions")
-    st.markdown("Enter one question per line.")
-    
     sample_questions = (
-        "What is the grace period for premium payment under the National Parivar Mediclaim Plus Policy?\n"
-        "What is the waiting period for pre-existing diseases (PED) to be covered?\n"
-        "Does this policy cover maternity expenses, and what are the conditions?\n"
+        "What is the grace period for premium payment under the policy?\n"
+        "What is the waiting period for pre-existing diseases?\n"
+        "Does this policy cover maternity expenses?\n"
         "What is the waiting period for cataract surgery?\n"
-        "Are the medical expenses for an organ donor covered under this policy?"
+        "Are organ donor expenses covered?"
     )
-    
-    questions_text = st.text_area(
-        "Questions", 
-        sample_questions, 
-        height=250
-    )
+    questions_text = st.text_area("Questions", sample_questions, height=250)
 
-submit_button = st.sidebar.button("🧠 Get Answers", use_container_width=True, type="primary")
+submit_button = st.sidebar.button("🧠 Get Answers", use_container_width=True)
 
-# --- Main Content Area for Results ---
+# --- Main Processing ---
 if submit_button:
-    # Validate inputs
-    if not doc_url or not questions_text or not bearer_token:
-        st.error("Please provide the document URL, at least one question, and the bearer token.")
+    if not uploaded_file or not questions_text or not bearer_token:
+        st.error("Please upload a PDF, enter your questions, and provide the bearer token.")
     else:
-        # Prepare the request
-        questions_list = [q.strip() for q in questions_text.split('\n') if q.strip()]
-        
-        payload = {
-            "documents": doc_url,
-            "questions": questions_list
-        }
-        
-        headers = {
-            "Authorization": f"Bearer {bearer_token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        questions_list = [q.strip() for q in questions_text.split("\n") if q.strip()]
 
-        # Make the API call
-        with st.spinner("Processing document and finding answers... Please wait. ⏳"):
-            try:
-                response = requests.post(API_ENDPOINT, json=payload, headers=headers)
-                
-                if response.status_code == 200:
-                    st.success("✅ Answers received successfully!")
-                    results = response.json()
-                    answers = results.get("answers", [])
-                    
-                    if len(answers) == len(questions_list):
-                        # Loop through questions and answers and display them in the glass boxes
-                        for i, (question, answer) in enumerate(zip(questions_list, answers)):
-                            # Basic HTML sanitization to prevent rendering issues
-                            question_html = question.replace("<", "&lt;").replace(">", "&gt;")
-                            answer_html = answer.replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        headers = {"Authorization": f"Bearer {bearer_token}"}
 
-                            st.markdown(f"""
-                            <div class="glass-box">
-                                <p class="question-title">Question {i+1}: {question_html}</p>
-                                <p class="answer-text">{answer_html}</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                    else:
-                        st.error("Mismatch between questions asked and answers received.")
+        try:
+            # Step 1: Upload the file
+            with st.spinner("📤 Uploading document..."):
+                files = {"file": (uploaded_file.name, uploaded_file, "application/pdf")}
+                upload_res = requests.post(UPLOAD_ENDPOINT, headers=headers, files=files)
 
+                if upload_res.status_code != 200:
+                    st.error(f"File upload failed: {upload_res.text}")
+                    st.stop()
+
+                # The backend should return a document reference or URL
+                doc_ref = upload_res.json().get("document_id", uploaded_file.name)
+
+            # Step 2: Run question answering
+            payload = {"documents": doc_ref, "questions": questions_list}
+            with st.spinner("🤖 Processing document and finding answers..."):
+                run_res = requests.post(RUN_ENDPOINT, json=payload, headers={**headers, "Content-Type": "application/json"})
+
+            if run_res.status_code == 200:
+                st.success("✅ Answers received successfully!")
+                answers = run_res.json().get("answers", [])
+
+                if len(answers) == len(questions_list):
+                    for i, (q, a) in enumerate(zip(questions_list, answers)):
+                        st.markdown(f"""
+                        <div class="glass-box">
+                            <p class="question-title">Question {i+1}: {q}</p>
+                            <p class="answer-text">{a}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                 else:
-                    st.error(f"❌ API Error (Status {response.status_code})")
-                    try:
-                        error_details = response.json()
-                        st.json(error_details)
-                    except json.JSONDecodeError:
-                        st.text(response.text)
+                    st.error("Mismatch between questions asked and answers received.")
 
-            except requests.exceptions.RequestException as e:
-                st.error(f"Connection Error: Could not connect to the backend at {API_ENDPOINT}.")
-                st.error(f"Details: {e}")
-                st.info("Please ensure the FastAPI backend server is running.")
+            else:
+                st.error(f"❌ API Error (Status {run_res.status_code})")
+                st.text(run_res.text)
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Connection Error: Could not connect to the backend.")
+            st.error(f"Details: {e}")
 
 else:
-    st.info("Enter a document URL and your questions in the sidebar, then click 'Get Answers'.")
-
-
-
-
-
+    st.info("Upload a PDF, enter your questions, and click 'Get Answers'.")
